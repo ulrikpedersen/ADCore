@@ -15,7 +15,27 @@ ifeq ($(STATIC_BUILD), NO)
 endif
 
 LIB_LIBS_WIN32     += hdf5dll szip zlib1
-LIB_LIBS_Darwin    += hdf5 sz
+
+# Check if the hdf5 library has been installed somewhere else
+ifdef HDF5
+  LIB_LIBS_Linux      += hdf5
+  LIB_LIBS_Darwin     += hdf5
+  hdf5_DIR=$(HDF5)/lib
+else
+  # Alternativly use the installed system library
+  LIB_SYS_LIBS_Linux  += hdf5
+  LIB_SYS_LIBS_Darwin += hdf5
+endif
+
+ifdef SZIP
+  LIB_LIBS_Linux      += sz
+  LIB_LIBS_Darwin     += sz
+  sz_DIR=$(SZIP)/lib
+else
+  LIB_SYS_LIBS_Linux  += sz
+  LIB_SYS_LIBS_Darwin += sz
+endif
+
 
 LIBRARY_IOC_WIN32    += NeXus
 LIBRARY_IOC_cygwin32 += NeXus

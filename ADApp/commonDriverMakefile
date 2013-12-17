@@ -89,10 +89,25 @@ PROD_SYS_LIBS_cygwin32  += Gdi32
 LIB_LIBS_Linux          += NeXus
 PROD_LIBS_Linux         += NeXus
 # The following system libraries must be installed
-LIB_SYS_LIBS_Linux      += hdf5 sz
-PROD_SYS_LIBS_Linux     += hdf5 sz
 LIB_SYS_LIBS_Linux      += tiff jpeg z
 PROD_SYS_LIBS_Linux     += tiff jpeg z
+ifdef HDF5
+  LIB_LIBS_Linux        += hdf5
+  PROD_LIBS_Linux       += hdf5
+  hdf5_DIR=$(HDF5)/lib
+else
+  LIB_SYS_LIBS_Linux    += hdf5
+  PROD_SYS_LIBS_Linux   += hdf5
+endif
+ifdef SZIP
+  LIB_LIBS_Linux        += sz
+  PROD_LIBS_Linux       += sz
+  sz_DIR=$(SZIP)/lib
+else
+  LIB_SYS_LIBS_Linux    += sz
+  PROD_SYS_LIBS_Linux   += sz
+endif
+
 
 # Nexus is built from source in areaDetector
 LIB_LIBS_solaris        += NeXus
