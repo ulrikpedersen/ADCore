@@ -30,7 +30,7 @@
 NDArray::NDArray()
   : referenceCount(0), pNDArrayPool(NULL),  
     uniqueId(0), timeStamp(0.0), ndims(0), dataType(NDInt8),
-    dataSize(0),  pData(NULL)
+    dataSize(0),  pData(NULL), extMemMng(false)
 {
   this->epicsTS.secPastEpoch = 0;
   this->epicsTS.nsec = 0;

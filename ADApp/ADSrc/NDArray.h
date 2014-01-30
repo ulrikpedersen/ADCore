@@ -118,6 +118,7 @@ public:
     void          *pData;       /**< Pointer to the array data.
                                   * The data is assumed to be stored in the order of dims[0] changing fastest, and 
                                   * dims[ndims-1] changing slowest. */
+    bool          extMemMng;    /**< Memory is managed (allocated, freed, re-used) outside of this class. Possibly by 3rd party driver lib */
     NDAttributeList *pAttributeList;  /**< Linked list of attributes */
 };
 
@@ -130,6 +131,19 @@ public:
   */
 class epicsShareClass NDArrayPool {
 public:
+    /** The NDArrayPool::Callback class is an abstract class
+     * This class provide an interface to supply callbacks on the release of NDArrays
+     * with a user-supplied memory buffer, right before it is put on the free-list.
+     * Implement the onExtMemRelease() method as the callback and register an instance
+     * of this class with the NDArrayPool::registerCallback() method.
+     */
+	class Callback {
+		friend class NDArrayPool;
+	private:
+		/** onExtMemRelease virtual method to be implemented as the callback.
+		 * Return value is used to set the NDArray::pData void pointer. */
+		virtual void *onExtMemRelease(void *pData) = 0;
+	};
     NDArrayPool  (int maxBuffers, size_t maxMemory);
     NDArray*     alloc     (int ndims, size_t *dims, NDDataType_t dataType, size_t dataSize, void *pData);
     NDArray*     copy      (NDArray *pIn, NDArray *pOut, int copyData);
@@ -149,6 +163,8 @@ public:
     size_t       maxMemory  ();
     size_t       memorySize ();
     int          numFree    ();
+    void         registerCallback(Callback * pCallback);
+
 private:
     ELLLIST      freeList_;      /**< Linked list of free NDArray objects that form the pool */
     epicsMutexId listLock_;      /**< Mutex to protect the free list */
@@ -157,6 +173,7 @@ private:
     size_t       maxMemory_;     /**< Maximum bytes of memory this object is allowed to allocate; -1=unlimited */
     size_t       memorySize_;    /**< Number of bytes of memory this object has currently allocated */
     int          numFree_;       /**< Number of NDArray objects in the free list */
+    Callback *   callback_;      /**< A user-supplied pointer to a Callback class instance */
 };
 
 #endif

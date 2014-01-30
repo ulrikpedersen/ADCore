@@ -33,7 +33,7 @@ extern "C" {epicsExportAddress(int, eraseNDAttributes);}
   * all of the NDArray objects; 0=unlimited.
   */
 NDArrayPool::NDArrayPool(int maxBuffers, size_t maxMemory)
-  : maxBuffers_(maxBuffers), numBuffers_(0), maxMemory_(maxMemory), memorySize_(0), numFree_(0)
+  : maxBuffers_(maxBuffers), numBuffers_(0), maxMemory_(maxMemory), memorySize_(0), numFree_(0), callback_(NULL)
 {
   ellInit(&freeList_);
   listLock_ = epicsMutexCreate();
@@ -111,10 +111,12 @@ NDArray* NDArrayPool::alloc(int ndims, size_t *dims, NDDataType_t dataType, size
   if (pArray) {
     /* If the caller passed a valid buffer use that, trust that its size is correct */
     if (pData) {
+      pArray->extMemMng = true;
       // If the caller supply a new memory buffer, first free the old one.
       if (pArray->pData) { free(pArray->pData); }
       pArray->pData = pData;
     } else {
+      pArray->extMemMng = false;
       /* See if the current buffer is big enough */
       if (pArray->dataSize < dataSize) {
         /* No, we need to free the current buffer and allocate a new one */
@@ -252,6 +254,12 @@ int NDArrayPool::release(NDArray *pArray)
   epicsMutexLock(listLock_);
   pArray->referenceCount--;
   if (pArray->referenceCount == 0) {
+    /* If the memory was supplied from an external memory management system,
+     * issue a callback to the user (if requested) to notify that the array
+     * is no longer used and about to be put on the free-list */
+	if (pArray->extMemMng && this->callback_) {
+      pArray->pData = this->callback_->onExtMemRelease(pArray->pData);
+	}
     /* The last user has released this image, add it back to the free list */
     ellAdd(&freeList_, &pArray->node);
     numFree_++;
@@ -620,6 +628,11 @@ size_t NDArrayPool::memorySize()
 int NDArrayPool::numFree()
 {
   return numFree_;
+}
+
+void NDArrayPool::registerCallback(Callback * pCallback)
+{
+  this->callback_ = pCallback;
 }
 
 /** Reports on the free list size and other properties of the NDArrayPool
