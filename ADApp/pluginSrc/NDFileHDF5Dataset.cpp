@@ -1,7 +1,11 @@
 #include "NDFileHDF5Dataset.h"
 #include <iostream>
 
-NDFileHDF5Dataset::NDFileHDF5Dataset(const std::string& name, hid_t dataset) : name_(name), dataset_(dataset), nextRecord(0)
+// Utility function to print some details from an dataset access property list
+void print_apl(hid_t dset_id);
+
+NDFileHDF5Dataset::NDFileHDF5Dataset(const std::string& name, hid_t dataset)
+: name_(name), dataset_(dataset), addr_(0), nextRecord(0)
 {
   this->maxdims     = NULL;
   this->chunkdims   = NULL;
@@ -161,4 +165,51 @@ hid_t NDFileHDF5Dataset::getHandle()
 }
 
 
+void NDFileHDF5Dataset::closeHandle()
+{
+  herr_t hdferr;
+  if (this->dataset_ > 0) {
+    print_apl(this->dataset_);
+	// Retrieve the dataset address
+	H5O_info_t object_info;
+	herr_t hdferr;
+	hdferr = H5Oget_info( this->dataset_, &object_info );
+	if (hdferr < 0) {
+      // error!
+	  return;
+	}
+	this->addr_ = object_info.addr;
+	hdferr = H5Dclose( this->dataset_ );
+	this->dataset_ = 0;
+  }
 
+}
+
+// TODO: protect against some corner-cases where dataset_ and/or file is open/closed already...
+hid_t NDFileHDF5Dataset::reopenHandle(hid_t file)
+{
+  hid_t dset=0;
+  if (this->dataset_ == 0 && file > 0) {
+	dset = H5Oopen_by_addr( file, this->addr_ );
+	if (dset > 0) this->dataset_ = dset;
+
+	// DEBUG: Check and print the chunk cache config
+	print_apl(dset);
+  }
+
+  return dset;
+}
+
+void print_apl(hid_t dset_id)
+{
+  size_t rdcc_nslots;
+  size_t rdcc_nbytes;
+  double rdcc_w0;
+
+  hid_t apl = H5Dget_access_plist( dset_id );
+  H5Pget_chunk_cache( apl, &rdcc_nslots, &rdcc_nbytes, &rdcc_w0 );
+  std::cout << "\t rdcc_nslots = " << rdcc_nslots << std::endl;
+  std::cout << "\t rdcc_nbytes = " << rdcc_nbytes << std::endl;
+  std::cout << "\t rdcc_w0     = " << rdcc_w0 << std::endl;
+
+}

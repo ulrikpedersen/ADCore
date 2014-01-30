@@ -14,11 +14,14 @@ class NDFileHDF5Dataset
     void extendDataSet(int extradims);
     asynStatus writeFile(NDArray *pArray, hid_t datatype, hid_t dataspace, hsize_t *framesize);
     hid_t getHandle();
+    void closeHandle();
+    hid_t reopenHandle(hid_t file);
 
   private:
 
     std::string name_;     // Name of this dataset
     hid_t       dataset_;  // Dataset handle
+    haddr_t     addr_;     // Dataset address/offset in file. Used for closing/reopening dset.
 
     int nextRecord;
 
