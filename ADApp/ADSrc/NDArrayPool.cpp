@@ -111,6 +111,8 @@ NDArray* NDArrayPool::alloc(int ndims, size_t *dims, NDDataType_t dataType, size
   if (pArray) {
     /* If the caller passed a valid buffer use that, trust that its size is correct */
     if (pData) {
+      // If the caller supply a new memory buffer, first free the old one.
+      if (pArray->pData) { free(pArray->pData); }
       pArray->pData = pData;
     } else {
       /* See if the current buffer is big enough */
