@@ -141,6 +141,7 @@ private:
   unsigned int calc_istorek();
   hsize_t calc_chunk_cache_bytes();
   hsize_t calc_chunk_cache_slots();
+  asynStatus start_swmr();
 
   void checkForOpenFile();
   asynStatus createNewFile(const char *fileName);
@@ -342,17 +343,72 @@ asynStatus NDFileHDF5::openFile(const char *fileName, NDFileOpenMode_t openMode,
 
   if (storePerformance == 1) this->configurePerformanceDataset();
 
+  if (this->start_swmr()) {
+    H5Fclose(this->file);
+    this->file = 0;
+    return asynError;
+  }
+
   /* End define mode. */
   return(asynSuccess);
 }
 
 
+asynStatus NDFileHDF5::start_swmr()
+{
+  const char* functionName = "start_swmr";
 
+  if (!this->file) {
+    return asynError;
+  }
 
+  asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+            "\tDataSets open:    %lu\n", H5Fget_obj_count( this->file, H5F_OBJ_DATASET ));
+  asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+            "\tGroups open:      %lu\n", H5Fget_obj_count( this->file, H5F_OBJ_GROUP ));
+  asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+            "\tAttributes open:  %lu\n", H5Fget_obj_count( this->file, H5F_OBJ_ATTR ));
+  asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+            "\tDatatypes open:   %lu\n", H5Fget_obj_count( this->file, H5F_OBJ_DATATYPE ));
+  asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+            "\tFiles open:       %lu\n", H5Fget_obj_count( this->file, H5F_OBJ_FILE ));
+  asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+            "\tSum ojbects open: %lu\n", H5Fget_obj_count( this->file, H5F_OBJ_ALL ));
 
+  std::map<std::string, NDFileHDF5Dataset *>::iterator it_dset;
+  NDFileHDF5Dataset *dset;
 
+  asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+            "===== Closing open dataset handles =======\n");
+  for (it_dset = this->detDataMap.begin();
+       it_dset != this->detDataMap.end();
+       ++it_dset)
+  {
+    dset = it_dset->second;
+    dset->closeHandle();
+  }
 
+  asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+            "===== Start swmr write operation =======\n");
+  hid_t hdfstatus = H5Fstart_swmr_write(this->file);
+  if (hdfstatus < 0) {
+    asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+              "%s::%s unable start SWMR write operation. ERRORCODE=%u\n",
+              driverName, functionName, hdfstatus);
+    return asynError;
+  }
 
+  asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+            "===== Re-opening dataset handles =======\n");
+  for (it_dset = this->detDataMap.begin();
+       it_dset != this->detDataMap.end();
+       ++it_dset)
+  {
+    dset = it_dset->second;
+    dset->reopenHandle(this->file);
+  }
+  return asynSuccess;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2672,6 +2728,15 @@ asynStatus NDFileHDF5::createNewFile(const char *fileName)
       setIntegerParam(NDFileHDF5_chunkBoundaryAlign, (int)align);
       setIntegerParam(NDFileHDF5_chunkBoundaryThreshold, (int)threshold);
     }
+  }
+
+  /* Set the very latest HDF5 file format in order to use the new SWMR mode */
+  hdfstatus = H5Pset_libver_bounds(access_plist, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
+  if (hdfstatus < 0)
+  {
+    asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+        "%s%s Warning: failed to set hdf library version boundary to H5F_LIBVER_LATEST (%u)\n",
+        driverName, functionName, H5F_LIBVER_LATEST);
   }
 
   /* File creation property list: set the i-storek according to HDF group recommendations */
