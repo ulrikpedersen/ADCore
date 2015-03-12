@@ -1,0 +1,18 @@
+
+# The equivalent of:
+# dbLoadRecords("simDetector.template","P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1")
+file simDetector.template
+{
+pattern { P,       R,     PORT, ADDR, TIMEOUT }
+        { 13SIM1:, cam1:, SIM1, 0,    1       }
+}
+
+
+# The equivalent of:
+# dbLoadRecords("NDFileHDF5.template",  "P=$(PREFIX),R=HDF1:,PORT=FileHDF1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT)")
+file NDFileHDF5.template
+{
+pattern { P,       R,     PORT,     ADDR, TIMEOUT, NDARRAY_PORT }
+        { 13SIM1:, HDF1:, FileHDF1, 0,    1,       SIM1         }
+}
+
