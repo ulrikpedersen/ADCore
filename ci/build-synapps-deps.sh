@@ -21,9 +21,25 @@ else
   echo 'Using cached directory epics base';
 fi
 
+if [ ! -f msi1-7.tar.gz ]; then
+  wget -nv http://www.aps.anl.gov/epics/download/extensions/msi1-7.tar.gz
+  tar -zxf msi1-7.tar.gz -C base-3.14.12.5/src
+fi
+if [ ! -d "$HOME/epics/base-3.14.12.5/bin/$EPICS_HOST_ARCH/msi" ]; then
+  make -C base-3.14.12.5/src/msi1-7
+  if [ $? -ne 0 ]; then 
+    echo "Failed to build msi 1-7 for $EPICS_HOST_ARCH"
+    exit 2
+  fi
+else
+  echo 'Using cached directory msi';
+fi
+export PATH=$PATH:$HOME/epics/base-3.14.12.5/bin/$EPICS_HOST_ARCH
+
+
 if [ ! -f sscan_R2-10.tar.gz ]; then
   wget -nv http://www.aps.anl.gov/bcda/synApps/tar/sscan_R2-10.tar.gz
-  tar -zxf sscan_R2-10.tar.gz
+  tar -zxf sscan_R2-10.tar.gz 
 fi
 if [ ! -d "$HOME/epics/sscan-2-10/lib/$EPICS_HOST_ARCH" ]; then
   echo "EPICS_BASE=$EPICS_BASE" > sscan-2-10/configure/RELEASE
