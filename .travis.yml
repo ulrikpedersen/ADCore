@@ -1,12 +1,29 @@
 language: cpp
 compiler: gcc
+sudo: false
 
 env:
-  - EPICS_BASE=/usr/lib/epics EPICS_HOST_ARCH=linux-x86_64
+  global:
+    - EPICS_BASE=$HOME/epics/base-3.14.12.5
+  matrix:
+    - EPICS_HOST_ARCH=linux-x86_64
+    - EPICS_HOST_ARCH=linux-x86
+    
+cache:
+  directories:
+  - $HOME/epics
+  
+addons:
+  apt:
+    packages:
+    - libhdf5-serial-dev
+    - libtiff-dev
+    - libxml2-dev 
+    - libboost-test-dev
   
 before_install:
-  - sh ci/install-packages.sh     # Install debian packages like HDF5, boost, tiff, EPICS base
-  - sh ci/build-synapps-deps.sh   # Download and build EPICS modules like asyn, busy ...
+  #- sh ci/install-packages.sh     # Install 3rd party tools (lcov)
+  - sh ci/build-synapps-deps.sh   # Download and build EPICS base and modules like asyn, busy ...
   - sh ci/configure.sh            # Prepare the configure/* files 
   
 install: 
@@ -14,10 +31,10 @@ install:
 
 # Run the tests
 script:
-  - ./bin/linux-x86_64/plugin-test --log_level=test_suite
+  - ./bin/$EPICS_HOST_ARCH/plugin-test --log_level=test_suite
 
 # If all worked then work out the coverage and update coveralls.io
-after_success:
-  - sh ci/coverage.sh
-  - coveralls-lcov --source-encoding=ISO-8859-1 ci/coverage.info
+#after_success:
+#  - sh ci/coverage.sh
+#  - coveralls-lcov --source-encoding=ISO-8859-1 ci/coverage.info
   
