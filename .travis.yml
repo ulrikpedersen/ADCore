@@ -9,25 +9,30 @@ env:
   matrix:
     - BOOST=/usr
     - BOOST=""
+    - BOOST=/usr EPICS_LIBCOM_ONLY=YES
     
 cache:
   directories:
   - $HOME/epics
+  - $HOME/synapps
   
 addons:
   apt:
     packages:
     - libhdf5-serial-dev
-    - libtiff-dev
     - libxml2-dev 
     - libboost-test-dev
   
 before_install:
   #- sh ci/install-packages.sh     # Install 3rd party tools (lcov)
-  - sh ci/build-synapps-deps.sh   # Download and build EPICS base and modules like asyn, busy ...
+  - sh ci/build-epics.sh          # Download and build EPICS base (unless its cached)
+  - if [ -z "$EPICS_LIBCOM_ONLY" ]; then sh ci/build-synapps-deps.sh ; fi  # Download and build synApps support modules like asyn, busy (unless its cached)
   - sh ci/configure.sh            # Prepare the configure/* files 
+  - ls $HOME/epics
+  - ls $HOME/synapps
   
 install: 
+  - pwd
   - make
 
 # Run the tests

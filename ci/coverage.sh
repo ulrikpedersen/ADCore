@@ -1,5 +1,7 @@
 #!/bin/bash
 # Run this script from the ADCore root directory
+# Make sure we exit on any error 
+set -e
 
 export ADCORE_DIR=`pwd`
 export COVERAGE_DIR=${ADCORE_DIR}/ci

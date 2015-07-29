@@ -1,4 +1,6 @@
 #!/bin/bash
+# Make sure we exit on any error 
+set -e
 
 # Installing latest version of code coverage tool lcov (because the ubuntu package is very old)
 wget http://downloads.sourceforge.net/ltp/lcov-1.11.tar.gz
