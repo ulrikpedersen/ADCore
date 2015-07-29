@@ -8,9 +8,13 @@ echo "HDF5=/usr"                             >> configure/CONFIG_SITE.linux-x86_
 echo "HDF5_LIB=/usr/lib"                     >> configure/CONFIG_SITE.linux-x86_64.Common
 echo "HDF5_INCLUDE=-I/usr/include"           >> configure/CONFIG_SITE.linux-x86_64.Common
 echo "XML2_INCLUDE=-I/usr/include/libxml2"   >> configure/CONFIG_SITE.linux-x86_64.Common
-echo "BOOST=/usr"                            >> configure/CONFIG_SITE.linux-x86_64.Common
-echo "BOOST_LIB=/usr/lib"                    >> configure/CONFIG_SITE.linux-x86_64.Common
-echo "BOOST_INCLUDE=/usr/include"            >> configure/CONFIG_SITE.linux-x86_64.Common
+if [ -z "$BOOST" ]; then
+  echo "Not building boost unittests"
+else
+  echo "BOOST=$BOOST"                        >> configure/CONFIG_SITE.linux-x86_64.Common
+  echo "BOOST_LIB=$BOOST/lib"                >> configure/CONFIG_SITE.linux-x86_64.Common
+  echo "BOOST_INCLUDE=$BOOST/include"        >> configure/CONFIG_SITE.linux-x86_64.Common
+fi
 echo "HOST_OPT=NO"                           >> configure/CONFIG_SITE.linux-x86_64.Common 
 echo "USR_CXXFLAGS_Linux=--coverage"         >> configure/CONFIG_SITE.linux-x86_64.Common 
 echo "USR_LDFLAGS_Linux=--coverage"          >> configure/CONFIG_SITE.linux-x86_64.Common 

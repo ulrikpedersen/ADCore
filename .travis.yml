@@ -5,9 +5,10 @@ sudo: false
 env:
   global:
     - EPICS_BASE=$HOME/epics/base-3.14.12.5
-  matrix:
     - EPICS_HOST_ARCH=linux-x86_64
-    - EPICS_HOST_ARCH=linux-x86
+  matrix:
+    - BOOST=/usr
+    - BOOST=""
     
 cache:
   directories:
@@ -31,7 +32,7 @@ install:
 
 # Run the tests
 script:
-  - ./bin/$EPICS_HOST_ARCH/plugin-test --log_level=test_suite
+  - if [ -f bin/$EPICS_HOST_ARCH/plugin-test ]; then ./bin/$EPICS_HOST_ARCH/plugin-test --log_level=test_suite ; fi
 
 # If all worked then work out the coverage and update coveralls.io
 #after_success:
