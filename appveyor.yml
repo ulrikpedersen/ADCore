@@ -1,0 +1,55 @@
+version: 2-3_bld{build}
+
+environment:
+  EPICS_BASE: C:\epics\base-3.14.12.5
+  EPICS_HOST_ARCH: win32-x86
+
+platform:
+  - x64
+
+install:
+  - dir C:\Libraries\boost\stage
+#  - '"%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64'
+  - '"%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" x86'
+  - mkdir artifacts
+  - If Not Exist C:\epics\ ( mkdir C:\epics )
+  - echo %EPICS_BASE%
+  - echo %EPICS_HOST_ARCH%
+
+# Build EPICS base if it is has not been cached
+  - cmd: ci\build-epics.bat
+  
+# Install ADBinaries and asyn if they have not been cached
+  - cmd: ci\build-support.bat
+  
+cache:
+  - C:\epics\base-3.14.12.5 -> ci\build-epics.bat
+  - C:\epics\ADBinaries-R2-2 -> ci\build-support.bat
+  - C:\epics\asyn-R4-26 -> ci\build-support.bat
+  
+artifacts:
+  - path: artifacts
+    name: build_artifacts
+    type: zip
+
+before_build:
+  - appveyor AddMessage "Configuring ADCore" -Category Information
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - echo EPICS_BASE=C:\\epics\\base-3.14.12.5> configure\RELEASE.windows-x64.Common
+  - echo ADBINARIES=C:\\epics\\ADBinaries-R2-2> configure\RELEASE.local
+  - echo ASYN=C:\\epics\\asyn-R4-26>> configure\RELEASE.local
+  - type configure\RELEASE.windows-x64.Common
+  - type configure\RELEASE.local
+  - echo BUILD_IOCS=NO > configure\CONFIG_SITE.%EPICS_HOST_ARCH%.Common
+  - echo EPICS_LIBCOM_ONLY=YES >> configure\CONFIG_SITE.%EPICS_HOST_ARCH%.Common
+  - echo HDF5_STATIC_BUILD=NO >> configure\CONFIG_SITE.%EPICS_HOST_ARCH%.Common
+  - type configure\CONFIG_SITE.%EPICS_HOST_ARCH%.Common
+  - echo ASYN configure/RELEASE:
+  - type C:\epics\asyn-R4-26\configure\RELEASE
+
+build_script:
+  - appveyor AddMessage "Building ADCore" -Category Information
+  - cl
+  - C:\MinGW\bin\mingw32-make
+
+
