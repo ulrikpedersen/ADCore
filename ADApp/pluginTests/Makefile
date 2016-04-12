@@ -22,6 +22,7 @@ ifdef BOOST
   ADTestUtility_SRCS += HDF5FileReader.cpp
   ADTestUtility_SRCS += TimeSeriesPluginWrapper.cpp
   ADTestUtility_SRCS += FFTPluginWrapper.cpp
+  ADTestUtility_SRCS += DriverPluginWrapper.cpp
 
   PROD_IOC_Linux += plugin-test
   PROD_IOC_Darwin += plugin-test
@@ -30,6 +31,7 @@ ifdef BOOST
   plugin-test_SRCS += test_NDFileHDF5.cpp
   plugin-test_SRCS += test_NDPluginTimeSeries.cpp
   plugin-test_SRCS += test_NDPluginFFT.cpp
+  plugin-test_SRCS += test_NDPluginDriver.cpp
   # Add tests for new plugins like this:
   #plugin-test_SRCS += test_<plugin name>.cpp
   
