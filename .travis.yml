@@ -21,6 +21,4 @@ after_success:
   - sh ci/coverage.sh
   - coveralls-lcov --source-encoding=ISO-8859-1 ci/coverage.info
 
-notifications:
-  slack: epicsareadetector:iA2hBZvqiHGpBzS7T0IktsmJ
   
